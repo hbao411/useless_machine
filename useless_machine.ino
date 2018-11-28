@@ -107,6 +107,7 @@ void loop() {
       break;
     }
     case ANGRY: {
+      drawAngry();
       checkAndHandleProximity();
       checkTime(5000);
       break;
@@ -203,11 +204,35 @@ void drawOWO() {
       time_to_wait = random(100, 4000);
     }
     display.clearDisplay();
-    display.drawBitmap(0, 16, owo_face_blink, 128, 48, WHITE);
+    display.drawBitmap(0, 16, owo_blink, 128, 48, WHITE);
     display.display();
   } else {
     display.clearDisplay();
-    display.drawBitmap(0, 16, owo_face, 128, 48, WHITE);
+    display.drawBitmap(0, 16, owo, 128, 48, WHITE);
+    display.display();
+  }
+}
+
+void drawAngry() {
+  long curr_ms = millis();
+  if (curr_ms - prev_display_ms > 200) {
+    prev_display_ms = curr_ms;
+    display.clearDisplay();
+    display.drawBitmap(0, 16, angry, 128, 48, WHITE);
+    display.drawBitmap(0, 0, vein, 16, 16, WHITE);
+    for (int i = 0; i < 3; i++) {
+      display.drawBitmap(12+i*9, 51+i%2, blush, 8, 8, WHITE);
+      display.drawBitmap(90+i*9, 51+i%2, blush, 8, 8, WHITE);
+    }
+    display.display();
+  } else {
+    display.clearDisplay();
+    display.drawBitmap(0, 16, angry, 128, 48, WHITE);
+    display.drawBitmap(2, 2, vein, 16, 16, WHITE);
+    for (int i = 0; i < 3; i++) {
+      display.drawBitmap(13+i*9, 51+i%2, blush, 8, 8, WHITE);
+      display.drawBitmap(91+i*9, 51+i%2, blush, 8, 8, WHITE);
+    }
     display.display();
   }
 }

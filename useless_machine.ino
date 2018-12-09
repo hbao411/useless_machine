@@ -29,9 +29,9 @@ typedef enum State {
 const int bottomServoPin = 2;
 const int topServoPin = 13;
 const int switchPins[5] = {8, 9, 10, 11, 12};
-const int switchAngles[5] = {0, 47, 93, 139, 180};
+const int switchAngles[5] = {10, 45, 90, 138, 180};
 const int armRetractedAngle = 0;
-const int armExtendedAngle = 180;
+const int armExtendedAngle = 90;
 const int motorPins[4] = {4, 5, 6, 7};
 const int interruptPin = 3;
 
@@ -107,10 +107,11 @@ void loop() {
     }
     prevState = state;
     state = CONFUSED;
+    prev_ms = millis();
   }
 
   // if switches were flipped too much, become angry
-  if (timesFlipped > 5) {
+  if (timesFlipped > 3) {
     timesFlipped = 0;
     prev_ms = millis();
     prev_display_ms = millis();
@@ -121,7 +122,7 @@ void loop() {
     case WAITING: {
       drawOWO();
       stopDriving();
-      checkAndHandleGesture();
+//      checkAndHandleGesture();
       if (checkSwitches()) {
         state = FLIPPING;
       }
@@ -142,7 +143,9 @@ void loop() {
     }
     case ANGRY: {
       drawAngry();
-//      checkAndHandleProximity();
+      driveBackwards();
+      delay(4000);
+      flipAngry();
       checkTime(5000);
       break;
     }
@@ -157,7 +160,8 @@ void loop() {
     }
     case CONFUSED: {
       drawConfused();
-      checkTime(5000);
+      flipConfused();
+      checkTime(10000);
       break;
     }
     default: {
@@ -223,26 +227,55 @@ void checkAndHandleGesture() {
 // drive backwards if a hand is detected
 void checkAndHandleProximity() {
   if (gesture_sensor.readProximity() > 0) {
+    Serial.print(gesture_sensor.readProximity());
+    Serial.print('\n');
     driveBackwards();
-    state = DRIVING;
-    prev_ms = millis();
   }
 }
 
 // flip switches
 void flipSwitch() {
   for (int i = 0; i < 5; i++) {
-//    if (switchFlipped[i]) {
-//      bottomServo.write(switchAngles[i]);
-//      delay(500);
-//    }
-//    while (switchFlipped[i]) {
-//      topServo.write(armExtendedAngle);
-//      delay(500);
-//      switchFlipped = digitalRead(switchPins[i]);
-//    }
-//    topServo.write(armRetractedAngle);
-//    delay(500);
+    if (switchFlipped[i]) {
+      bottomServo.write(switchAngles[i]);
+      delay(500);
+    }
+    while (switchFlipped[i]) {
+      topServo.write(armExtendedAngle);
+      switchFlipped[i] = !digitalRead(switchPins[i]);
+    }
+    topServo.write(armRetractedAngle);
+  }
+}
+
+// flip switches
+void flipConfused() {
+  for (int i = 0; i < 5; i++) {
+    switchFlipped[i] = !digitalRead(switchPins[i]);
+    if (!switchFlipped[i]) {
+      bottomServo.write(switchAngles[i]);
+      delay(500);
+      for (int a = 0; a < (armExtendedAngle + 1); a += 2) {
+        topServo.write(a);
+        delay(700/armExtendedAngle);
+      }
+      //topServo.write(armExtendedAngle);
+      switchFlipped[i] = !digitalRead(switchPins[i]);
+      delay(250);
+      topServo.write(armRetractedAngle);
+    }
+    
+  }
+}
+
+
+//flip up but fail
+void flipAngry() {
+  for (int i = 0; i < 5; i++) {
+    topServo.write(armExtendedAngle);
+    delay(100);
+    topServo.write(armRetractedAngle);
+    delay(500);
   }
 }
 
